@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<title>IndexedDB</title>
+</head>
+<body>
+<!--create database-->
+<h2>Create</h2>
+<div>
+	<label for="createDatabaseName">Database name </label>
+	<input type="text" id="createDatabaseName" value="database">
+	<input type="button" id="crateDatabaseButton" value="create DB">
+</div>
+
+
+<h2>Read</h2>
+<!--show databases-->
+<div>
+	<input type="button" id="showDatabasesButton" value="show DBs">
+	<form id="showDatabases">
+		<!--		<br>db_databaseName<input type="radio" id="db_databaseName" value="db_databaseName">-->
+	</form>
+</div>
+
+<h2>Delete</h2>
+<!--delete database-->
+<div>
+	<label for="deleteDatabaseName">Database name </label>
+	<input type="text" id="deleteDatabaseName" value="database">
+	<input type="button" id="deleteDatabaseButton" value="delete DB">
+</div>
+
+<br>
+<br>
+<br>
+<h1>Edit inside a Database</h1>
+<!--enter a string-->
+<div>
+	<label for="inputString">Enter a string</label>
+	<input type="text" id="inputString">
+	<input type="button" id="saveStringButton" value="save string to DB">
+</div>
+<br>
+<!--display a string-->
+<div>
+	<label for="outputString">Display a string</label>
+	<input type="text" id="outputString">
+	<input type="button" id="getStringButton" value="get string from DB">
+</div>
+
+<br>
+<br>
+<br>
+
+<input type="button" id="saveObjectsButton" value="save Objects to DB" onclick="saveObjects()">
+<input type="button" id="getObjectsButton" value="get Objects from DB" onclick="getObjects()">
+
+
+<div id="note">
+
+</div>
+
+<script>
+    //Event listener
+
+    //CRUD: Edit databases
+    const crateDatabaseButton = document.getElementById("crateDatabaseButton");
+    crateDatabaseButton.addEventListener("click", createIndexedDB);
+
+    const showDatabasesButton = document.getElementById("showDatabasesButton");
+    showDatabasesButton.addEventListener("click", showIndexedDBs);
+
+    const deleteDatabaseButton = document.getElementById("deleteDatabaseButton");
+    deleteDatabaseButton.addEventListener("click", deleteIndexedDB);
+
+
+    //Edit Data
+    const saveStringButton = document.getElementById("saveStringButton");
+    saveStringButton.addEventListener("click", saveString);
+
+    const getStringButton = document.getElementById("getStringButton");
+    getStringButton.addEventListener("click", getString);
+
+
+    function createIndexedDB() {
+        const databaseName = document.getElementById("createDatabaseName").value;
+        const request = indexedDB.open(databaseName);
+
+        //EVENTS
+
+        //on upgrade needed
+        request.onupgradeneeded = function () {
+            console.log("Datenbank '" + databaseName + "' wurde erstellt (upgrade is called)");
+        }
+
+        //on success
+        request.onsuccess = function () {
+            console.log("Datenbank '" + databaseName + "' ist vorhanden (success is called)");
+        }
+
+        //on error
+        request.onerror = function () {
+            console.log("error");
+        }
+    }
+
+    function showIndexedDBs() {
+        // const databases = indexedDB.databases().then(r => console.log(r));
+        const form = document.getElementById("showDatabases");
+        form.innerHTML = '';
+        const databases2 = indexedDB.databases().then(function (r) {
+            console.log(r);
+            for (let database of r) {
+                form.innerHTML += "<br>" + database.name;
+            }
+        });
+        // form.innerHTML +=
+    }
+
+    function deleteIndexedDB() {
+        const databaseName = document.getElementById("deleteDatabaseName").value;
+        const request = indexedDB.deleteDatabase(databaseName);
+
+        //EVENTS
+
+        //on upgrade needed
+        request.onupgradeneeded = function () {
+            console.log("Datenbank '" + databaseName + "' wurde erstellt (upgrade is called)");
+        }
+
+        //on success
+        request.onsuccess = function () {
+            console.log("Datenbank '" + databaseName + "' ist vorhanden (success is called)");
+        }
+
+        //on error
+        request.onerror = function () {
+            console.log("error");
+        }
+    }
+
+
+    function saveString() {
+        // const request = indexedDB.
+
+    }
+
+    function getString() {
+
+    }
+
+    function saveObjects() {
+        const userData = [{
+            number: 0,
+            firstName: "John",
+            lastName: "Doe",
+            age: 30,
+        }, {
+            number: 1,
+            firstName: "Jane",
+            lastName: "Doe",
+            age: 31,
+        }];
+
+        const dbName = "database";
+        const dbVersion = 1;
+
+        let request = indexedDB.open(dbName, dbVersion);
+
+        request.onerror = function (event) {
+            // Handle errors.
+        };
+        request.onupgradeneeded = function (event) {
+            let db = event.target.result;
+            console.log(db);
+
+            // Create an objectStore to hold information about our customers. We're
+            // going to use "ssn" as our key path because it's guaranteed to be
+            // unique - or at least that's what I was told during the kickoff meeting.
+            let objectStore = db.createObjectStore("users", {keyPath: "number"});
+
+            // Create an index to search customers by name. We may have duplicates
+            // so we can't use a unique index.
+            objectStore.createIndex("firstName", "firstName", {unique: false});
+
+            // Create an index to search customers by email. We want to ensure that
+            // no two customers have the same email, so use a unique index.
+            objectStore.createIndex("lastName", "lastName", {unique: false});
+
+            // Use transaction oncomplete to make sure the objectStore creation is
+            // finished before adding data into it.
+            objectStore.transaction.oncomplete = function (event) {
+                // Store values in the newly created objectStore.
+                let userObjectStore = db.transaction("users", "readwrite").objectStore("users");
+                userData.forEach(function (user) {
+                    userObjectStore.add(user);
+                });
+            };
+        };
+
+    }
+
+    function getObjects() {
+        const dbName = "database";
+        const dbVersion = 1;
+
+        let request = indexedDB.open(dbName, dbVersion);
+
+        request.onerror = function (event) {
+            // Handle errors.
+        };
+
+        request.onupgradeneeded = function (event) {
+            let db = event.target.result;
+            let transaction = db.transaction(["users"]);
+            let objectStore = transaction.objectStore("users");
+            let request = objectStore.get("0");
+            request.onerror = function (event) {
+                // Handle errors!
+            };
+            request.onsuccess = function (event) {
+                // Do something with the request.result!
+                console.log(request.result.name);
+            };
+        }
+    }
+
+    function test() {
+
+        const dbName = 'mydbname';
+        const version = 1;
+        const storeName = 'store0';
+
+        const db = indexedDB.open(dbName, version);
+        // const store = db.createObjectStore(storeName);
+        db.createObjectStore(storeName);
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+
+        //save
+        const key = 'Hello';
+        const value = 'Hello world!';
+        store.put(value, key);
+
+        //get all
+        // const items = db.transaction(storeName).objectStore(storeName).getAll();
+        // console.log(items);
+
+    }
+
+    const note = document.getElementById("note");
+
+    function openDB() {
+
+        let DBOpenRequest = indexedDB.open("toDoList", 4);
+
+        DBOpenRequest.onsuccess = function (event) {
+            note.innerHTML += '<li>Database initialized.</li>';
+
+            // store the result of opening the database in the db
+            // variable. This is used a lot below
+            let db = DBOpenRequest.result;
+
+            // Add the data to the database
+            addData();
+        };
+    }
+
+    function addData() {
+        // Create a new object to insert into the IDB
+        let newItem = [{
+            taskTitle: "Walk dog",
+            hours: 19,
+            minutes: 30,
+            day: 24,
+            month: "December",
+            year: 2013,
+            notified: "no"
+        }];
+
+        // open a read/write db transaction, ready to add data
+        let transaction = db.transaction(["toDoList"], "readwrite");
+
+        // report on the success of opening the transaction
+        transaction.oncomplete = function (event) {
+            note.innerHTML += '<li>Transaction completed: database modification finished.</li>';
+        };
+
+        transaction.onerror = function (event) {
+            note.innerHTML += '<li>Transaction not opened due to error. Duplicate items not allowed.</li>';
+        };
+
+        // create an object store on the transaction
+        let objectStore = transaction.objectStore("toDoList");
+
+        // add our newItem object to the object store
+        let objectStoreRequest = objectStore.add(newItem[0]);
+
+        objectStoreRequest.onsuccess = function (event) {
+            // report the success of the request (this does not mean the item
+            // has been stored successfully in the DB - for that you need transaction.oncomplete)
+            note.innerHTML += '<li>Request successful.</li>';
+        };
+    }
+
+    // openDB();
+    // test();
+</script>
+
+</body>
+</html>
