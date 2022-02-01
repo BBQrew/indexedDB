@@ -56,11 +56,6 @@
 <input type="button" id="saveObjectsButton" value="save Objects to DB" onclick="saveObjects()">
 <input type="button" id="getObjectsButton" value="get Objects from DB" onclick="getObjects()">
 
-
-<div id="note">
-
-</div>
-
 <script>
     //Event listener
 
@@ -225,87 +220,6 @@
             };
         }
     }
-
-    function test() {
-
-        const dbName = 'mydbname';
-        const version = 1;
-        const storeName = 'store0';
-
-        const db = indexedDB.open(dbName, version);
-        // const store = db.createObjectStore(storeName);
-        db.createObjectStore(storeName);
-        const tx = db.transaction(storeName, "readwrite");
-        const store = tx.objectStore(storeName);
-
-        //save
-        const key = 'Hello';
-        const value = 'Hello world!';
-        store.put(value, key);
-
-        //get all
-        // const items = db.transaction(storeName).objectStore(storeName).getAll();
-        // console.log(items);
-
-    }
-
-    const note = document.getElementById("note");
-
-    function openDB() {
-
-        let DBOpenRequest = indexedDB.open("toDoList", 4);
-
-        DBOpenRequest.onsuccess = function (event) {
-            note.innerHTML += '<li>Database initialized.</li>';
-
-            // store the result of opening the database in the db
-            // variable. This is used a lot below
-            let db = DBOpenRequest.result;
-
-            // Add the data to the database
-            addData();
-        };
-    }
-
-    function addData() {
-        // Create a new object to insert into the IDB
-        let newItem = [{
-            taskTitle: "Walk dog",
-            hours: 19,
-            minutes: 30,
-            day: 24,
-            month: "December",
-            year: 2013,
-            notified: "no"
-        }];
-
-        // open a read/write db transaction, ready to add data
-        let transaction = db.transaction(["toDoList"], "readwrite");
-
-        // report on the success of opening the transaction
-        transaction.oncomplete = function (event) {
-            note.innerHTML += '<li>Transaction completed: database modification finished.</li>';
-        };
-
-        transaction.onerror = function (event) {
-            note.innerHTML += '<li>Transaction not opened due to error. Duplicate items not allowed.</li>';
-        };
-
-        // create an object store on the transaction
-        let objectStore = transaction.objectStore("toDoList");
-
-        // add our newItem object to the object store
-        let objectStoreRequest = objectStore.add(newItem[0]);
-
-        objectStoreRequest.onsuccess = function (event) {
-            // report the success of the request (this does not mean the item
-            // has been stored successfully in the DB - for that you need transaction.oncomplete)
-            note.innerHTML += '<li>Request successful.</li>';
-        };
-    }
-
-    // openDB();
-    // test();
 </script>
 
 </body>
